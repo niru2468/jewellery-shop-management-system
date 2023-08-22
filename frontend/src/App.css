@@ -1,0 +1,18 @@
+.logo-link,
+.link-link {
+	text-decoration: none;
+	color: black;
+}
+.btn-danger {
+	margin-left: 10px;
+}
+.jewellery {
+	margin-top: 20px;
+	margin-left: 20px;
+}
+.card-img-top {
+	height: 40vh;
+}
+.card {
+	margin: 15px;
+}
