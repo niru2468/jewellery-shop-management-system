@@ -1,5 +1,9 @@
 import styled from "styled-components";
 import { mobile } from "../responsive";
+import { useState } from "react";
+import { toast } from "react-toastify";
+import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
 
 const Container = styled.div`
 	width: 100vw;
@@ -38,7 +42,11 @@ const Input = styled.input`
 `;
 const Agreement = styled.span`
 	font-size: 12px;
-	margin: 20px 0px;
+	margin: 25px 0px 15px 0px;
+`;
+const Login = styled.span`
+	font-size: 13px;
+	margin: 25px 0px 15px 0px;
 `;
 const Button = styled.button`
 	width: 40%;
@@ -50,22 +58,93 @@ const Button = styled.button`
 `;
 
 const Register = () => {
+	const navigate = useNavigate();
+	const [firstName, setFirstName] = useState("");
+	const [lastName, setLastName] = useState("");
+	const [email, setEmail] = useState("");
+	const [password, setPassword] = useState("");
+	const [confirmPassword, setConfirmPassword] = useState("");
+	const [mobileNo, setMobileNo] = useState("");
+	const handleClick = async (e) => {
+		e.preventDefault();
+		if (firstName.length === "") {
+			toast.error("Please Enter First Name");
+		} else if (lastName.length === "") {
+			toast.error("Please Enter Last Name");
+		} else if (email.length === "") {
+			toast.error("Please Enter Email");
+		} else if (password.length === "") {
+			toast.error("Please Enter Password");
+		} else if (confirmPassword.length === "") {
+			toast.error("Please Confirm Password");
+		} else if (password !== confirmPassword) {
+			toast.error("Password do not match");
+		} else if (mobileNo.length === "") {
+			toast.error("Please Enter Mobile Number");
+		} else {
+			const res = await axios.post(
+				"http://localhost:8085/api/v1/customer/register",
+				{
+					firstName,
+					lastName,
+					email,
+					password,
+					mobileNo
+				}
+			);
+			if (res.data.status === "success") {
+				toast.success("Successfully registered a new user");
+				navigate("/login");
+			}
+			//else {
+			// 	toast.error("Error while registering a new user, please try again");
+			// }
+		}
+	};
 	return (
 		<Container>
 			<Wrapper>
 				<Title>CREATE AN ACCOUNT</Title>
 				<Form>
-					<Input placeholder="name" />
-					<Input placeholder="last name" />
-					<Input placeholder="username" />
-					<Input placeholder="email" />
-					<Input placeholder="password" />
-					<Input placeholder="confirm password" />
+					<Input
+						type="text"
+						placeholder="First Name"
+						onChange={(e) => setFirstName(e.target.value)}
+					/>
+					<Input
+						type="text"
+						placeholder="Last Name"
+						onChange={(e) => setLastName(e.target.value)}
+					/>
+					<Input
+						type="email"
+						placeholder="email"
+						onChange={(e) => setEmail(e.target.value)}
+					/>
+					<Input
+						type="password"
+						placeholder="password"
+						onChange={(e) => setPassword(e.target.value)}
+					/>
+					<Input
+						type="password"
+						placeholder="confirm password"
+						onChange={(e) => setConfirmPassword(e.target.value)}
+					/>
+					<Input
+						type="tel"
+						placeholder="Mobile Number"
+						onChange={(e) => setMobileNo(e.target.value)}
+					/>
 					<Agreement>
 						By creating an account, I consent to the processing of my personal
 						data in accordance with the <b>PRIVACY POLICY</b>
+						<br />
+						<Link to="/login" style={{ color: "black" }}>
+							<Login>ALREADY HAVE AN ACCOUNT ?</Login>
+						</Link>
 					</Agreement>
-					<Button>CREATE</Button>
+					<Button onClick={handleClick}>CREATE</Button>
 				</Form>
 			</Wrapper>
 		</Container>

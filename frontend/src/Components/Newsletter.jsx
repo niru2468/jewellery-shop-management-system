@@ -1,6 +1,8 @@
 import { Send } from "@mui/icons-material";
 import styled from "styled-components";
 import { mobile } from "../responsive";
+import { toast } from "react-toastify";
+import { useState } from "react";
 const Container = styled.div`
 	height: 60vh;
 	background-color: #fcf5f5;
@@ -42,6 +44,15 @@ const Button = styled.button`
 `;
 
 const Newsletter = () => {
+	const [disable, setDisable] = useState(false);
+	const handleClick = () => {
+		setDisable(true);
+		if (disable) {
+			toast.error("You have already subscribed!");
+		} else {
+			toast.success("Thanks for joing the Newsletter!!");
+		}
+	};
 	return (
 		<Container>
 			<Title>Newsletter</Title>
@@ -50,7 +61,7 @@ const Newsletter = () => {
 			</Description>
 			<InputContainer>
 				<Input placeholder="Your Email" />
-				<Button>
+				<Button onClick={handleClick}>
 					<Send />
 				</Button>
 			</InputContainer>

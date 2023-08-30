@@ -2,14 +2,21 @@ import styled from "styled-components";
 import Navbar from "../Components/Navbar";
 import Newsletter from "../Components/Newsletter";
 import Footer from "../Components/Footer";
-import { Add, Remove } from "@mui/icons-material";
+import Banner from "../Components/Banner";
+import {
+	Add,
+	DiamondOutlined,
+	LocalShippingOutlined,
+	Remove,
+	SyncAltOutlined
+} from "@mui/icons-material";
 import { mobile } from "../responsive";
 import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { addProduct } from "../redux/cartRedux";
-import { useDispatch } from "react-redux";
+import { addProduct, getTotals } from "../redux/cartRedux";
+import { useDispatch, useSelector } from "react-redux";
 
 const Container = styled.div``;
 const Wrapper = styled.div`
@@ -29,6 +36,7 @@ const Image = styled.img`
 const InfoContainer = styled.div`
 	flex: 1;
 	padding: 0px 50px;
+	margin-left: 60px;
 	${mobile({ padding: "10px" })}
 `;
 const Title = styled.h1`
@@ -74,16 +82,26 @@ const Button = styled.button`
 		background-color: #f8f4f4;
 	}
 `;
+const Info = styled.div`
+	margin-top: 50px;
+`;
+const InfoPara = styled.p`
+	font-weight: 600;
+`;
 
 const Product = () => {
+	const { currentUser, loginState } = useSelector((state) => state.user);
+	const cartTotalQuantity = useSelector((state) => state.user.cartQuantity);
 	const location = useLocation();
 	const dispatch = useDispatch();
+	const cart = useSelector((state) => state.cart);
 	const id = location.pathname.split("/")[2];
 	const [product, setProduct] = useState({});
 	const [quantity, setQuantity] = useState(1);
 	useEffect(() => {
 		getProd();
-	}, []);
+		dispatch(getTotals());
+	}, [cart, dispatch]);
 	const getProd = async () => {
 		const res = await axios.get(`http://localhost:8085/api/v1/jewellery/${id}`);
 		if (res.data.status === "success") {
@@ -98,17 +116,47 @@ const Product = () => {
 				setQuantity(quantity - 1);
 			}
 		} else {
-			setQuantity(quantity + 1);
+			if (quantity < product.stock_qty) {
+				setQuantity(quantity + 1);
+			} else {
+				toast.error("Only 5 items are there in the stock");
+			}
 		}
 	};
-	const handleClick = () => {
-		dispatch(
-			addProduct({
-				...product,
-				quantity,
+	const handleClick = async () => {
+		const b = cart.products.filter((data) => data.jewellery_id !== id);
+		if (loginState === false) {
+			if (b[0] && b[0].cartQuantity + 1 > product.stock_qty) {
+				toast.error(`Only ${product.stock_qty} items are there in the cart`);
+			} else {
+				dispatch(
+					addProduct({
+						...product,
+						cartTotalQuantity: quantity,
+						price: product.jewellery_price * quantity
+					})
+				);
+			}
+		} else {
+			if (b[0] && b[0].cartQuantity + 1 > product.stock_qty) {
+				toast.error(`Only ${product.stock_qty} items are there in the cart`);
+			} else {
+				dispatch(
+					addProduct({
+						...product,
+						quantity,
+						price: product.jewellery_price * quantity
+					})
+				);
+			}
+			const data = {
+				customer_id: currentUser.customer_id,
+				jewellery_id: product.jewellery_id,
+				qty: quantity,
 				price: product.jewellery_price * quantity
-			})
-		);
+			};
+			await axios.post("http://localhost:8085/api/v1/cart/add", data);
+		}
 	};
 	return (
 		<Container>
@@ -122,7 +170,7 @@ const Product = () => {
 					<Desc>{product.jewellery_description}</Desc>
 					<Price>₹ {product.jewellery_price}</Price>
 					<AddContainer>
-						<AmountContainer>
+						{/* <AmountContainer>
 							<Remove
 								style={{ cursor: "pointer" }}
 								onClick={() => handleQuantity("dec")}
@@ -132,11 +180,27 @@ const Product = () => {
 								style={{ cursor: "pointer" }}
 								onClick={() => handleQuantity("inc")}
 							/>
-						</AmountContainer>
-						<Button onClick={handleClick}>ADD TO CART</Button>
+						</AmountContainer> */}
+						<Button style={{ marginTop: "15px" }} onClick={handleClick}>
+							ADD TO CART
+						</Button>
 					</AddContainer>
+					<Info>
+						<hr style={{ width: "60%", border: "1px solid brown" }} />
+						<InfoPara>
+							<DiamondOutlined /> Purity Guaranteed.
+						</InfoPara>
+						<InfoPara>
+							<SyncAltOutlined /> Exchange across all stores.
+						</InfoPara>
+						<InfoPara>
+							<LocalShippingOutlined /> Free Shipping all across India
+						</InfoPara>
+						<hr style={{ width: "60%", border: "1px solid brown" }} />
+					</Info>
 				</InfoContainer>
 			</Wrapper>
+			<Banner />
 			<Newsletter />
 			<Footer />
 		</Container>

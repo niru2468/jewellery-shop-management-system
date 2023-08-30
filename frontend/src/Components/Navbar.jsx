@@ -2,8 +2,12 @@ import { Search, ShoppingCartOutlined } from "@mui/icons-material";
 import styled from "styled-components";
 import Badge from "@mui/material/Badge";
 import { mobile } from "../responsive";
-import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { signOut } from "../redux/userRedux";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { getTotals } from "../redux/cartRedux";
 
 const Container = styled.div`
 	height: 60px;
@@ -26,17 +30,17 @@ const Language = styled.span`
 	cursor: pointer;
 	${mobile({ display: "none" })}
 `;
-const SearchContainer = styled.div`
-	border: 1px solid lightgray;
-	display: flex;
-	align-items: center;
-	margin-left: 25px;
-	padding: 5px;
-`;
-const Input = styled.input`
-	border: none;
-	${mobile({ width: "50px" })}
-`;
+// const SearchContainer = styled.div`
+// 	border: 1px solid lightgray;
+// 	display: flex;
+// 	align-items: center;
+// 	margin-left: 25px;
+// 	padding: 5px;
+// `;
+// const Input = styled.input`
+// 	border: none;
+// 	${mobile({ width: "50px" })}
+// `;
 const Logo = styled.h1`
 	font-weight: bold;
 	${mobile({ fontSize: "24px" })}
@@ -59,20 +63,43 @@ const MenuItem = styled.div`
 	${mobile({ fontSize: "12px", marginLeft: "10px" })}
 `;
 const Navbar = () => {
-	const quantity = useSelector((state) => state.cart.quantity);
+	const cartTotalQuantity = useSelector(
+		(state) => state.cart.cartTotalQuantity
+	);
+	const [qty, setQty] = useState([]);
+	const dispatch = useDispatch();
+	const navigate = useNavigate();
+	const cart = useSelector((state) => state.cart);
 	const { loginState, currentUser } = useSelector((state) => state.user);
 	const handleClick = () => {
-		window.location.reload();
+		dispatch(signOut());
+		navigate("/");
 	};
+	useEffect(() => {
+		getQty();
+		dispatch(getTotals());
+	}, [cart, dispatch, qty]);
+	const getQty = async () => {
+		if (loginState === false) {
+		} else {
+			const res = await axios.get(
+				`http://localhost:8085/api/v1/cart/getqty/${currentUser.customer_id}`
+			);
+			setQty(res.data.data);
+		}
+	};
+	const finalQty = qty.reduce((prev, curr) => {
+		return prev + curr.qty;
+	}, 0);
 	return (
 		<Container>
 			<Wrapper>
 				<Left>
 					<Language>EN</Language>
-					<SearchContainer>
+					{/* <SearchContainer>
 						<Input placeholder="Search" />
 						<Search style={{ color: "gray", fontSize: 16 }} />
-					</SearchContainer>
+					</SearchContainer> */}
 				</Left>
 				<Center>
 					<Logo>
@@ -95,19 +122,23 @@ const Navbar = () => {
 						</>
 					) : (
 						<>
-							<MenuItem>{currentUser.name}</MenuItem>
-							<button
-								onClick={handleClick}
-								type="button"
-								class="btn btn-danger"
+							<Link
+								to="/profile"
+								style={{ textDecoration: "none", color: "black" }}
 							>
-								Logout
-							</button>
+								<MenuItem>{currentUser.name}</MenuItem>
+							</Link>
+							<Link to="/orders" style={{ textDecoration: "none" }}>
+								<MenuItem style={{ color: "black" }}>MY ORDERS</MenuItem>
+							</Link>
+							<MenuItem style={{ cursor: "pointer" }} onClick={handleClick}>
+								LOGOUT
+							</MenuItem>
 						</>
 					)}
 					<Link to="/cart">
 						<MenuItem>
-							<Badge badgeContent={quantity} color="primary">
+							<Badge badgeContent={cartTotalQuantity}>
 								<ShoppingCartOutlined />
 							</Badge>
 						</MenuItem>

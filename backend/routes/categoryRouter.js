@@ -2,6 +2,8 @@ const express = require('express');
 const db = require('../db/dbConnect');
 const utils = require('../utils/utils');
 const router = express.Router();
+const multer = require('multer');
+const upload = multer({ dest: 'uploads' });
 
 router.get('/', (req, res) => {
     const statement = 'select * from category';
@@ -9,10 +11,11 @@ router.get('/', (req, res) => {
         res.send(utils.createResult(err, result));
     });
 });
-router.post('/add', (req, res) => {
-    const statement = "INSERT INTO category(category_name, category_description) VALUES(?,?)";
+router.post('/add', upload.single("category_img"), (req, res) => {
+    const statement = "INSERT INTO category(category_name, category_description, category_img) VALUES(?,?,?)";
     const { category_name, category_description } = req.body;
-    db.query(statement, [category_name, category_description], (err, result) => {
+    const { filename } = req.file;
+    db.query(statement, [category_name, category_description, filename], (err, result) => {
         res.send(utils.createResult(err, result));
     });
 });

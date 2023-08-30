@@ -21,7 +21,11 @@ const AllJewellery = () => {
 				{jewellery.map((j) => {
 					return (
 						<div className="col-md-3">
-							<div className="card" style={{ width: "18rem" }}>
+							<div
+								key={j.jewellery_id}
+								className="card"
+								style={{ width: "18rem" }}
+							>
 								<img
 									src={`http://localhost:8085/${j.jewellery_image}`}
 									className="card-img-top"
@@ -31,12 +35,18 @@ const AllJewellery = () => {
 									<h5 className="card-title" style={{ fontWeight: 600 }}>
 										{j.jewellery_name}
 									</h5>
-									<p className="card-text">{j.jewellery_description}</p>
 									<Link
 										to={`/product/${j.jewellery_id}`}
-										class="btn btn-primary"
+										class="btn btn-dark"
+										style={{
+											backgroundColor: "white",
+											marginTop: "20px",
+											color: "black",
+											border: "1px solid teal",
+											borderRadius: 0
+										}}
 									>
-										Explore
+										EXPLORE
 									</Link>
 								</div>
 							</div>

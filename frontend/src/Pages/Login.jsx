@@ -1,10 +1,11 @@
 import styled from "styled-components";
 import { mobile } from "../responsive";
-import { useState } from "react";
-import { login } from "../redux/apiCalls";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { loginFailure, loginStart, loginSuccess } from "../redux/userRedux";
 
 const Container = styled.div`
 	width: 100vw;
@@ -59,28 +60,63 @@ const Button = styled.button`
 	} */
 `;
 
-const Link = styled.a`
+const Link1 = styled.a`
 	margin: 5px 0px;
 	font-size: 12px;
 	text-decoration: underline;
 	cursor: pointer;
+	color: black;
 `;
 
 const Login = () => {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
-	const dispath = useDispatch();
+	const dispatch = useDispatch();
 	const navigate = useNavigate();
-	const { isFetching, error, currentUser } = useSelector((state) => state.user);
-	const handleClick = (e) => {
+	const cart = useSelector((state) => state.cart);
+	const { currentUser } = useSelector((state) => state.user);
+	useEffect(() => {
+		addDataToDBFromCart();
+	});
+	const handleClick = async (e) => {
+		dispatch(loginStart());
 		e.preventDefault();
 		if (email.length === "") {
 			toast.error("Please Enter Email");
 		} else if (password.length === "") {
 			toast.error("Please Enter Password}");
 		} else {
-			login(dispath, { email, password });
-			navigate("/");
+			const res = await axios.post(
+				"http://localhost:8085/api/v1/customer/login",
+				{ email, password }
+			);
+			if (res.data.status === "success") {
+				const { token, name, email } = res.data.data;
+				sessionStorage["token"] = token;
+				sessionStorage["name"] = name;
+				sessionStorage["email"] = email;
+				dispatch(loginSuccess(res.data.data));
+				toast.success(`Welcome ${name} to JSMS.`);
+				navigate("/");
+				addDataToDBFromCart();
+			} else {
+				toast.error("Invalid user name or password");
+				dispatch(loginFailure());
+			}
+		}
+	};
+	const addDataToDBFromCart = () => {
+		if (cart.products.length >= 0 && currentUser) {
+			let arr = cart.products.map((data) => {
+				let a = {
+					customer_id: currentUser.customer_id,
+					jewellery_id: data.jewellery_id,
+					qty: data.cartQuantity,
+					price: data.price
+				};
+				axios.post("http://localhost:8085/api/v1/cart/add", a);
+			});
+			Promise.allSettled(arr).then((data) => {});
 		}
 	};
 	return (
@@ -98,8 +134,10 @@ const Login = () => {
 						onChange={(e) => setPassword(e.target.value)}
 					/>
 					<Button onClick={handleClick}>LOGIN</Button>
-					<Link>FORGOT PASSWORD?</Link>
-					<Link>CREATE A NEW ACCOUNT!</Link>
+					{/* <Link1>FORGOT PASSWORD?</Link1> */}
+					<Link to="/register">
+						<Link1>CREATE A NEW ACCOUNT!</Link1>
+					</Link>
 				</Form>
 			</Wrapper>
 		</Container>
