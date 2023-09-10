@@ -2,6 +2,9 @@
 The JSMS Web App is a full-stack web application build using MERN(MySQL,ExpressJS,ReactJS,NodeJS) for jewellery shop management system. 
 It provides a user-friendly interface for viewing, adding, updating, and deleting jewellery products to the cart and also make payments using Stripe.
 
+## Demo
+https://github.com/niru2468/jewellery-shop-management-system/assets/64010759/d74c871c-b87b-4991-8302-4f4ae4db0522
+
 ## Features
 - Add product to the cart.
 - View a list of all available jewellery products.
